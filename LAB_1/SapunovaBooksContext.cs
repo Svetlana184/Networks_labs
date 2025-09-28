@@ -9,12 +9,14 @@ public partial class SapunovaBooksContext : DbContext
 {
     public SapunovaBooksContext()
     {
+        Database.EnsureDeleted();
         Database.EnsureCreated();
     }
 
     public SapunovaBooksContext(DbContextOptions<SapunovaBooksContext> options)
         : base(options)
     {
+        Database.EnsureDeleted();
         Database.EnsureCreated();
     }
 
