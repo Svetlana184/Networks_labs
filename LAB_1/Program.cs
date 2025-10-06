@@ -1,6 +1,7 @@
 ﻿using Faker;
 using LAB_1;
 using LAB_1.Models;
+using System.Runtime.Serialization;
 using static System.Reflection.Metadata.BlobBuilder;
 
 
@@ -28,24 +29,18 @@ using ( SapunovaBooksContext db = new SapunovaBooksContext())
     db.Books.AddRange(b1, b2, b3, b4, b5, b6);
     db.SaveChanges();
     //Delivery
-    for (int i =0; i>3; i++)
-    {
-        Delivery d1 = new Delivery { NameDelivery = Faker.Lorem.Sentence(4), NameCompany="ОАО Луч", Address="Комсомольская 4"};
-        Delivery d2 = new Delivery { NameDelivery = Faker.Lorem.Sentence(4), NameCompany = "ЗАО Квантор", Address = "Комсомольская 10" };
-        Delivery d3 = new Delivery { NameDelivery = Faker.Lorem.Sentence(4), NameCompany = Faker.Company.Name(), Address = Faker.Address.City() };
-        db.AddRange(d1, d2, d3);
-        db.SaveChanges();
-    }
+    Delivery d1 = new Delivery { NameDelivery = Faker.Lorem.Sentence(4), NameCompany="ОАО Луч", Address="Комсомольская 4"};
+    Delivery d2 = new Delivery { NameDelivery = Faker.Lorem.Sentence(4), NameCompany = "ЗАО Квантор", Address = "Комсомольская 10" };
+    Delivery d3 = new Delivery { NameDelivery = Faker.Lorem.Sentence(4), NameCompany = Faker.Company.Name(), Address = Faker.Address.City() };
+    db.Deliveries.AddRange(d1, d2, d3);
+    db.SaveChanges();
     
     //Purchase
-    for (int i = 0; i > 2; i++)
-    {
-        Purchase p1 = new Purchase { CodeBook = db.Books.FirstOrDefault(p => p.TitleBook == "Труды без котиков")!.CodeBook, DateOrder = DateTime.Parse("09/09/2025"), CodeDelivery = db.Deliveries.FirstOrDefault(p => p.NameCompany == "ОАО Луч")!.CodeDelivery, Cost = 5000, Amount = 5 };
-        Purchase p2 = new Purchase { CodeBook = db.Books.FirstOrDefault(p => p.TitleBook == "Труды о котиках")!.CodeBook, DateOrder = DateTime.Parse("19/08/2025"), CodeDelivery = db.Deliveries.FirstOrDefault(p => p.NameCompany == "ЗАО Квантор")!.CodeDelivery, Cost = 10000, Amount = 10 };
-        Purchase p3 = new Purchase { CodeBook = db.Books.FirstOrDefault(p => p.TitleBook == "Турецкий гамбит")!.CodeBook, DateOrder = DateTime.Parse("19/08/2025"), CodeDelivery = db.Deliveries.FirstOrDefault(p => p.NameCompany == "ЗАО Квантор")!.CodeDelivery, Cost = 500, Amount = 10 };
-        db.AddRange(p1, p2, p3);
-        db.SaveChanges();
-    }
+    Purchase p1 = new Purchase { CodeBook = 1, DateOrder = DateTime.Parse("09/09/2025"), CodeDelivery = db.Deliveries.FirstOrDefault(p => p.NameCompany == "ОАО Луч")!.CodeDelivery, Cost = 5000, Amount = 5 };
+    Purchase p2 = new Purchase { CodeBook = 5, DateOrder = DateTime.Parse("19/08/2025"), CodeDelivery = db.Deliveries.FirstOrDefault(p => p.NameCompany == "ЗАО Квантор")!.CodeDelivery, Cost = 10000, Amount = 10 };
+    Purchase p3 = new Purchase { CodeBook = 3, DateOrder = DateTime.Parse("19/08/2025"), CodeDelivery = db.Deliveries.FirstOrDefault(p => p.NameCompany == "ЗАО Квантор")!.CodeDelivery, Cost = 500, Amount = 10 };
+    db.Purchases.AddRange(p1, p2, p3);
+    db.SaveChanges();
 
 
 
@@ -93,6 +88,18 @@ using ( SapunovaBooksContext db = new SapunovaBooksContext())
     //26. Вывести список издательств (поле Publish) из таблицы Publishing_house,
     //в которых выпущены книги, названия которых (поле Title_book)
     //начинаются со слова ‘Труды’ и город издания(поле City) – ‘Новосибирск’.
+    var novosib = from b in db.Books
+                  where b.TitleBook.StartsWith("Труды")
+                  join p in db.PublishingHouses on b.CodePublish equals p.CodePublish
+                  where p.City == "Новосибирск"
+                  select new
+                  {
+                      Title = b.TitleBook,
+                      Publish = p.Publish
+                  };
+    Console.WriteLine("Вывести список издательств в которых выпущены книги, названия которых начинаются со слова ‘Труды’ и город издания – ‘Новосибирск’.");
+    foreach (var item in novosib) Console.WriteLine($"Title: {item.Title} Publish: {item.Publish}");
+    Console.WriteLine();
 
 
     //31. Вывести суммарную стоимость партии одноименных книг
@@ -107,18 +114,52 @@ using ( SapunovaBooksContext db = new SapunovaBooksContext())
         });
     Console.WriteLine("Вывести суммарную стоимость партии одноименных книг в каждой поставке.");
     foreach (var item in sim_books) Console.WriteLine($"Title: {item.Title} Cost: {item.Cost_Amount}");
+    Console.WriteLine();
 
     //36. Вывести среднюю стоимость (использовать поле Cost) и среднее количество экземпляров
     //книг(использовать поле Amount) в одной поставке, где автором книги является ‘Акунин’
     //(условие по полю Name_author). 
-    
+    var ak = from b in db.Books
+             join a in db.Authors on b.CodeAuthor equals a.CodeAuthor
+             where a.NameAuthor == "Акунин"
+             join p in db.Purchases on b.CodeBook equals p.CodeBook
+             select new
+             {
+                 Cost = p.Cost,
+                 Amount = p.Amount
+             };
+    Console.WriteLine("Вывести среднюю стоимость и среднее количество экземпляров книг в одной поставке, где автором книги является ‘Акунин’");
+    foreach(var item in ak) Console.WriteLine(item.Cost);
+    //Console.WriteLine($"Средняя стоимость: {ak.Average(p=>p.Cost)}; Среднее количество: {ak.Average(p=>p.Amount)}");
+    Console.WriteLine();
+
 
     //41. Вывести общую сумму поставок книг (использовать поле Cost) и
     //поместить результат в поле с названием Sum_cost, выполненных ‘ОАО Луч’ (условие по полю Name_company).
-
+    var lych = db.Purchases.Join(db.Deliveries.Where(p => p.NameCompany == "ОАО Луч"),
+        p => p.CodeDelivery,
+        d => d.CodeDelivery,
+        (p, d) => new
+        {
+            Cost = p.Cost
+        });
+    Console.WriteLine("Вывести общую сумму поставок книг, выполненных ‘ОАО Луч’");
+    decimal sum_cost = 0;
+    foreach (var item in lych) sum_cost += item.Cost;
+    Console.WriteLine(sum_cost);
+    Console.WriteLine();
 
     //46. Вывести список авторов (поле Name_author), книги которых были выпущены
     //в издательствах ‘Мир’, ‘Питер Софт’, ‘Наука’ (условие по полю Publish).
+    var publ = from p in db.Purchases
+               join b in db.Books on p.CodeBook equals b.CodeBook
+               join h in db.PublishingHouses on b.CodePublish equals h.CodePublish
+               where h.Publish == "Мир" || h.Publish == "Питер Софт" || h.Publish == "Наука"
+               join a in db.Authors on b.CodeAuthor equals a.CodeAuthor
+               select a.NameAuthor;
+    Console.WriteLine("Вывести список авторов, книги которых были выпущены в издательствах ‘Мир’, ‘Питер Софт’, ‘Наука’");
+    foreach (var item in publ) Console.WriteLine(item);
+    Console.WriteLine();
 
 
     //Вывести список книг (поле Title_book), у которых количество страниц
@@ -130,8 +171,19 @@ using ( SapunovaBooksContext db = new SapunovaBooksContext())
 
 
     //56. Вывести список книг (поле Title_book), которые были поставлены
-    //поставщиком ‘ЗАО Квантор’ (условие по полю Name_company). 
-  
+    //поставщиком ‘ЗАО Квантор’ (условие по полю Name_company).
+    var kvantor = from p in db.Purchases
+                  join d in db.Deliveries on p.CodeDelivery equals d.CodeDelivery
+                  where d.NameCompany == "ЗАО Квантор"
+                  join b in db.Books on p.CodeBook equals b.CodeBook
+                  select new
+                  {
+                      Title = b.TitleBook
+                  };
+    Console.WriteLine("список книг, которые были поставлены поставщиком ‘ЗАО Квантор’");
+    foreach (var item in kvantor) Console.WriteLine(item.Title);
+    Console.WriteLine();
+
 
     //61. Добавить в таблицу Books новую запись, причем вместо ключевого
     //поля поставить код(поле Code_book), автоматически увеличенный на единицу
