@@ -121,7 +121,7 @@ using ( SapunovaBooksContext db = new SapunovaBooksContext())
     //(условие по полю Name_author). 
     var ak = from b in db.Books
              join a in db.Authors on b.CodeAuthor equals a.CodeAuthor
-             where a.NameAuthor == "Акунин"
+             where a.NameAuthor == "Акунин Борис"
              join p in db.Purchases on b.CodeBook equals p.CodeBook
              select new
              {
@@ -130,7 +130,7 @@ using ( SapunovaBooksContext db = new SapunovaBooksContext())
              };
     Console.WriteLine("Вывести среднюю стоимость и среднее количество экземпляров книг в одной поставке, где автором книги является ‘Акунин’");
     foreach(var item in ak) Console.WriteLine(item.Cost);
-    //Console.WriteLine($"Средняя стоимость: {ak.Average(p=>p.Cost)}; Среднее количество: {ak.Average(p=>p.Amount)}");
+    Console.WriteLine($"Средняя стоимость: {ak.Average(p=>p.Cost)}; Среднее количество: {ak.Average(p=>p.Amount)}");
     Console.WriteLine();
 
 
